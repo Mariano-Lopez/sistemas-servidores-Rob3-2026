@@ -57,7 +57,7 @@ $servidores = $pdo->query("SELECT * FROM servidores")->fetchAll();
                         <th>Estado</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tabla_servidores">
                     <?php if (count($servidores) > 0): ?>
                         <?php foreach ($servidores as $srv): ?>
                             <tr>
@@ -88,15 +88,36 @@ $servidores = $pdo->query("SELECT * FROM servidores")->fetchAll();
                 .then(data => {
                     if (data.error) return;
                     
+                    // Actualizar tarjetas superiores
                     const tempEl = document.getElementById('val_temp');
                     tempEl.textContent = data.temperatura + ' °C';
                     tempEl.className = data.color;
-
                     document.getElementById('val_hum').textContent = data.humedad + ' %';
-                    
                     const estadoEl = document.getElementById('val_estado');
                     estadoEl.textContent = data.estado;
                     estadoEl.className = data.color;
+
+                    // Actualizar tabla de servidores
+                    const tbody = document.getElementById('tabla_servidores');
+                    tbody.innerHTML = ''; // Limpiar filas anteriores
+
+                    if (data.servidores && data.servidores.length > 0) {
+                        data.servidores.forEach(srv => {
+                            const tr = document.createElement('tr');
+                            const badge = (srv.estado.toLowerCase() === 'activo') 
+                                ? '<span class="badge bg-success">Prendido</span>' 
+                                : '<span class="badge bg-danger">Apagado</span>';
+                            
+                            tr.innerHTML = `
+                                <td>${srv.nombre}</td>
+                                <td>${srv.ip}</td>
+                                <td>${badge}</td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="3" class="text-center">No hay servidores registrados.</td></tr>';
+                    }
                 })
                 .catch(error => console.error('Error al actualizar datos:', error));
         }

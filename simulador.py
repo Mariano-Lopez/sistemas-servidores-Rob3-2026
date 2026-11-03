@@ -3,10 +3,18 @@ import time
 import random
 import smtplib
 from email.message import EmailMessage
+#Configuracion de pings a servidores
+import subprocess
+import platform
+
 
 # Configuración de Correo
 EMAIL_REMITENTE = "marianoalopez99@gmail.com"
 PASSWORD_APP = "qpla aoxt kjag flsm" # REEMPLAZAR AQUÍ
+
+# Configuración de Pings (en segundos)
+# 120 = 2 minutos | 3600 = 1 hora
+INTERVALO_PING = 20
 
 def conectar_bd():
     return mysql.connector.connect(
@@ -31,9 +39,18 @@ def enviar_alerta_correo(destinatarios, asunto, mensaje):
     except Exception as e:
         print(f"Error al enviar la alerta: {e}")
 
+def verificar_ping(ip_servidor):
+    parametro = "-n" if platform.system().lower() == "windows" else "-c"
+    # Ejecuta 1 ping esperando máximo 1000 milisegundos (1 segundo)
+    comando = ["ping", parametro, "1", "-w", "1000", ip_servidor]
+    resultado = subprocess.run(comando, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return resultado.returncode == 0
+
+
 def iniciar_simulacion():
     print("Iniciando simulador de termómetro (Duración programada: 2 minutos)...")
-    
+
+    ultimo_ping = 0
     # 8 iteraciones x 15 segundos de espera = 120 segundos
     for i in range(1, 9):
         temperatura = round(random.uniform(22.0, 32.0), 1)
@@ -45,6 +62,23 @@ def iniciar_simulacion():
         # 1. Guardar en base de datos
         cursor.execute("INSERT INTO historial_temperaturas (temperatura, humedad) VALUES (%s, NULL)", (temperatura,))
         conexion.commit()
+
+        # --- Control de tiempo para los Pings ---
+        tiempo_actual = time.time()
+        if (tiempo_actual - ultimo_ping) >= INTERVALO_PING:
+            print("⏱️ Ejecutando pings de rutina a los servidores...")
+            
+            cursor.execute("SELECT id, ip FROM servidores")
+            servidores_db = cursor.fetchall()
+            
+            for srv_id, ip in servidores_db:
+                estado_actual = "Activo" if verificar_ping(ip) else "Apagado"
+                cursor.execute("UPDATE servidores SET estado = %s WHERE id = %s", (estado_actual, srv_id))
+            
+            conexion.commit()
+            ultimo_ping = tiempo_actual # Reiniciamos el cronómetro
+        # ----------------------------------------
+
         
         # 2. Revisar umbrales
         cursor.execute("SELECT temp_alta, temp_apagado_servers FROM configuracion_sistema WHERE id = 1")

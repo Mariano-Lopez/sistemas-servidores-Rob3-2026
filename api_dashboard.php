@@ -28,9 +28,12 @@ if ($temp_actual !== '--') {
     }
 }
 
+$servidores = $pdo->query("SELECT id, nombre, ip, estado FROM servidores")->fetchAll(PDO::FETCH_ASSOC);
+
 echo json_encode([
     'temperatura' => $temp_actual,
     'humedad' => $humedad_actual,
     'estado' => $estado_clima,
-    'color' => $color_clima
+    'color' => $color_clima,
+    'servidores' => $servidores
 ]);
