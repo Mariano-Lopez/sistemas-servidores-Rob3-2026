@@ -1,0 +1,38 @@
+-- Tabla para los umbrales de temperatura y configuración general
+CREATE TABLE IF NOT EXISTS configuracion_sistema (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    temp_alta DECIMAL(5,2) DEFAULT 26.00,
+    temp_apagado_servers DECIMAL(5,2) DEFAULT 30.00
+);
+INSERT INTO configuracion_sistema (id, temp_alta, temp_apagado_servers) VALUES (1, 26.00, 30.00)
+ON DUPLICATE KEY UPDATE id=1;
+
+-- Tabla para el ABM de Servidores
+CREATE TABLE IF NOT EXISTS servidores (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    ip VARCHAR(50) NOT NULL,
+    estado VARCHAR(50) DEFAULT 'Activo'
+);
+
+-- Tabla para el ABM de Contactos (para notificaciones)
+CREATE TABLE IF NOT EXISTS contactos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    telefono VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL
+);
+
+
+CREATE TABLE IF NOT EXISTS historial_temperaturas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    temperatura DECIMAL(5,2) NOT NULL,
+    humedad DECIMAL(5,2) DEFAULT NULL,
+    fecha_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Registros de prueba simulados
+INSERT INTO historial_temperaturas (temperatura, humedad, fecha_hora) VALUES 
+(24.5, 45.0, DATE_SUB(NOW(), INTERVAL 2 HOUR)),
+(26.1, 46.2, DATE_SUB(NOW(), INTERVAL 1 HOUR)),
+(30.5, 44.8, NOW());
