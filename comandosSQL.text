@@ -1,3 +1,7 @@
+--Comando para uktilizar en la terminal de laragon
+composer require google/apiclient
+
+
 -- Tabla para los umbrales de temperatura y configuración general
 CREATE TABLE IF NOT EXISTS configuracion_sistema (
     id INT AUTO_INCREMENT PRIMARY KEY,

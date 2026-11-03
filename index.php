@@ -45,6 +45,11 @@ if ($_POST) {
             </div>
             <button type="submit" class="btn btn-primary w-100">Ingresar</button>
         </form>
+        <div class="d-grid gap-2 mt-3">
+            <a href="login_google.php" class="btn btn-danger font-weight-bold">
+                Iniciar sesión con Google Institucional
+            </a>
+        </div>
     </div>
 </body>
 </html>
