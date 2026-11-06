@@ -28,12 +28,28 @@ if ($temp_actual !== '--') {
     }
 }
 
+// ... tus consultas anteriores (temperatura actual, humedad, etc.)
+
+// Obtener la fecha de la última medición de temperatura
+$queryTemp = $pdo->query("SELECT MAX(fecha_hora) as ultima_temp FROM historial_temperaturas");
+$ultima_temp = $queryTemp ? ($queryTemp->fetchColumn() ?: 'Sin registros') : 'Error BD';
+
+// Obtener la fecha del último ping a los servidores
+$queryPing = $pdo->query("SELECT MAX(ultima_verificacion) as ultimo_ping FROM servidores");
+$ultimo_ping = $queryPing ? ($queryPing->fetchColumn() ?: 'Sin registros') : 'Error BD';
+
 $servidores = $pdo->query("SELECT id, nombre, ip, estado FROM servidores")->fetchAll(PDO::FETCH_ASSOC);
 
+// Agregar los nuevos datos al JSON de respuesta
 echo json_encode([
     'temperatura' => $temp_actual,
     'humedad' => $humedad_actual,
     'estado' => $estado_clima,
     'color' => $color_clima,
-    'servidores' => $servidores
+    'servidores' => $servidores,
+    'ultima_temp' => $ultima_temp, // Nuevo dato
+    'ultimo_ping' => $ultimo_ping  // Nuevo dato
 ]);
+
+
+

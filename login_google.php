@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'vendor/autoload.php';
+require_once 'includes/db.php'; // Incluimos la conexión PDO
 
 // Reemplaza con tus credenciales de Google Cloud
 $clientID = '912634052705-lumsb838md99m7nucvlbqjrm5bs4js6v.apps.googleusercontent.com';
@@ -30,6 +31,12 @@ if (isset($_GET['code'])) {
         if (str_ends_with($email, '@ies21.edu.ar')) {
             $_SESSION['user'] = $email;
             $_SESSION['nombre'] = $name;
+
+            // Registrar evento de auditoría LOGIN usando $name y $pdo
+            $userIp = $_SERVER['REMOTE_ADDR'];
+            $stmtAcceso = $pdo->prepare("INSERT INTO historial_accesos (usuario, email, accion, ip) VALUES (?, ?, 'LOGIN', ?)");
+            $stmtAcceso->execute([$name, $email, $userIp]);
+
             header('Location: dashboard.php');
             exit();
         } else {

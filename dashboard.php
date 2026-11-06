@@ -20,7 +20,11 @@ $servidores = $pdo->query("SELECT * FROM servidores")->fetchAll();
         <div>
             <a href="dashboard.php" class="btn btn-light btn-sm me-2">Dashboard</a>
             <a href="configuracion.php" class="btn btn-outline-light btn-sm me-2">Configuración</a>
-            <a href="log_temperaturas.php" class="btn btn-outline-light btn-sm me-2">Logs</a>
+            <a href="log_temperaturas.php" class="btn btn-outline-light btn-sm me-2">Historial de Temperaturas</a>
+            <?php if (esAdmin()): ?>
+                <!-- Solo visible para los 4 administradores -->
+                <a href="accesos.php" class="btn btn-outline-light btn-sm me-2">Auditoría de Accesos</a>
+            <?php endif; ?>
             <a href="logout.php" class="btn btn-outline-danger btn-sm">Salir</a>
         </div>
     </nav>
@@ -31,6 +35,10 @@ $servidores = $pdo->query("SELECT * FROM servidores")->fetchAll();
                     <h5>Temperatura Actual</h5>
                     <!-- Se agregaron IDs para que JavaScript los encuentre -->
                     <h2 id="val_temp" class="text-muted">-- °C</h2>
+                    <!-- Ejemplo dentro de la tarjeta de Temperatura -->
+                    <div class="card-body">
+                        <small class="text-muted">Última medición: <strong id="time_temp">Cargando...</strong></small>
+                    </div>
                 </div>
             </div>
             <div class="col-md-4">
@@ -47,8 +55,15 @@ $servidores = $pdo->query("SELECT * FROM servidores")->fetchAll();
             </div>
         </div>
 
+        
         <div class="card shadow p-4 mt-2">
             <h4>Estado de los Servidores</h4>
+            <!-- Ejemplo arriba o debajo de tu tabla de Servidores -->
+            <div class="table-responsive">
+                <div class="mb-2">
+                    <small class="text-muted">Último ping registrado: <strong id="time_ping">Cargando...</strong></small>
+                </div>
+            </div>
             <table class="table table-striped mt-3">
                 <thead>
                     <tr>
@@ -78,6 +93,7 @@ $servidores = $pdo->query("SELECT * FROM servidores")->fetchAll();
                 </tbody>
             </table>
         </div>
+        
     </div>
 
     <!-- Script de actualización en tiempo real -->
@@ -100,6 +116,9 @@ $servidores = $pdo->query("SELECT * FROM servidores")->fetchAll();
                     // Actualizar tabla de servidores
                     const tbody = document.getElementById('tabla_servidores');
                     tbody.innerHTML = ''; // Limpiar filas anteriores
+
+                    document.getElementById('time_temp').textContent = data.ultima_temp;
+                    document.getElementById('time_ping').textContent = data.ultimo_ping;
 
                     if (data.servidores && data.servidores.length > 0) {
                         data.servidores.forEach(srv => {

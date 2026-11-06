@@ -19,6 +19,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mensaje = "Umbrales actualizados.";
     }
 
+    if ($accion === 'guardar_intervalos') {
+        $temp_valor = (int)$_POST['temp_valor'];
+        $temp_unidad = $_POST['temp_unidad'];
+        $ping_valor = (int)$_POST['ping_valor'];
+        $ping_unidad = $_POST['ping_unidad'];
+
+        $stmt = $pdo->prepare("UPDATE configuracion_sistema SET 
+            intervalo_temp_valor = ?, 
+            intervalo_temp_unidad = ?, 
+            intervalo_ping_valor = ?, 
+            intervalo_ping_unidad = ? 
+            WHERE id = 1");
+        $stmt->execute([$temp_valor, $temp_unidad, $ping_valor, $ping_unidad]);
+        $mensaje = "Intervalos de tiempo actualizados.";
+    }
+
     if ($accion === 'agregar_servidor') {
         $nombre = $_POST['nombre_servidor'];
         $ip = $_POST['ip_servidor'];
@@ -88,7 +104,10 @@ $contactos = $pdo->query("SELECT * FROM contactos")->fetchAll();
         <div>
             <a href="dashboard.php" class="btn btn-outline-light btn-sm me-2">Dashboard</a>
             <a href="configuracion.php" class="btn btn-light btn-sm me-2">Configuración</a>
-            <a href="log_temperaturas.php" class="btn btn-outline-light btn-sm me-2">Logs</a>
+            <a href="log_temperaturas.php" class="btn btn-outline-light btn-sm me-2">Historial de Temperaturas</a>
+            <?php if (esAdmin()): ?>
+                <a href="accesos.php" class="btn btn-outline-light btn-sm me-2">Auditoría de Accesos</a>
+            <?php endif; ?>
             <a href="logout.php" class="btn btn-outline-danger btn-sm">Salir</a>
         </div>
     </nav>
@@ -99,22 +118,64 @@ $contactos = $pdo->query("SELECT * FROM contactos")->fetchAll();
             <div class="alert alert-success mt-3"><?= $mensaje ?></div>
         <?php endif; ?>
 
-        <div class="card shadow p-4 my-4">
-            <h4>Umbrales Térmicos de Seguridad</h4>
-            <form method="POST" class="row g-3 mt-1">
-                <input type="hidden" name="accion" value="guardar_umbrales">
-                <div class="col-md-6">
-                    <label class="form-label">Temperatura de Alerta Alta (°C)</label>
-                    <input type="number" step="0.1" name="temp_alta" class="form-control" value="<?= $config['temp_alta'] ?? 26 ?>" required>
+        <div class="row">
+            <!-- Umbrales Térmicos -->
+            <div class="col-md-6">
+                <div class="card shadow p-4 my-3">
+                    <h4>Umbrales Térmicos de Seguridad</h4>
+                    <form method="POST" class="row g-3 mt-1">
+                        <input type="hidden" name="accion" value="guardar_umbrales">
+                        <div class="col-md-6">
+                            <label class="form-label">Alerta Alta (°C)</label>
+                            <input type="number" step="0.1" name="temp_alta" class="form-control" value="<?= $config['temp_alta'] ?? 26 ?>" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Apagado (°C)</label>
+                            <input type="number" step="0.1" name="temp_apagado" class="form-control" value="<?= $config['temp_apagado_servers'] ?? 30 ?>" required>
+                        </div>
+                        <div class="col-12 mt-3">
+                            <button type="submit" class="btn btn-primary w-100">Guardar Umbrales</button>
+                        </div>
+                    </form>
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label">Temperatura de Apagado de Servidores (°C)</label>
-                    <input type="number" step="0.1" name="temp_apagado" class="form-control" value="<?= $config['temp_apagado_servers'] ?? 30 ?>" required>
+            </div>
+
+            <!-- Frecuencia de Medición -->
+            <div class="col-md-6">
+                <div class="card shadow p-4 my-3">
+                    <h4>Intervalos de Frecuencia</h4>
+                    <form method="POST" class="row g-3 mt-1">
+                        <input type="hidden" name="accion" value="guardar_intervalos">
+                        <div class="col-md-6">
+                            <label class="form-label">Medición Temp.</label>
+                            <input type="number" name="temp_valor" min="1" class="form-control" value="<?= $config['intervalo_temp_valor'] ?? 15 ?>" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Unidad</label>
+                            <select name="temp_unidad" class="form-select">
+                                <option value="segundos" <?= ($config['intervalo_temp_unidad'] ?? '') === 'segundos' ? 'selected' : '' ?>>Segundos</option>
+                                <option value="minutos" <?= ($config['intervalo_temp_unidad'] ?? '') === 'minutos' ? 'selected' : '' ?>>Minutos</option>
+                                <option value="horas" <?= ($config['intervalo_temp_unidad'] ?? '') === 'horas' ? 'selected' : '' ?>>Horas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Pings a Servidores</label>
+                            <input type="number" name="ping_valor" min="1" class="form-control" value="<?= $config['intervalo_ping_valor'] ?? 30 ?>" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Unidad</label>
+                            <select name="ping_unidad" class="form-select">
+                                <option value="segundos" <?= ($config['intervalo_ping_unidad'] ?? '') === 'segundos' ? 'selected' : '' ?>>Segundos</option>
+                                <option value="minutos" <?= ($config['intervalo_ping_unidad'] ?? '') === 'minutos' ? 'selected' : '' ?>>Minutos</option>
+                                <option value="horas" <?= ($config['intervalo_ping_unidad'] ?? '') === 'horas' ? 'selected' : '' ?>>Horas</option>
+                            </select>
+                        </div>
+                        <div class="col-12 mt-3">
+                            <button type="submit" class="btn btn-primary w-100">Guardar Intervalos</button>
+                        </div>
+                    </form>
                 </div>
-                <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Guardar Umbrales</button>
-                </div>
-            </form>
+            </div>
         </div>
 
         <div class="row">
@@ -136,7 +197,7 @@ $contactos = $pdo->query("SELECT * FROM contactos")->fetchAll();
                     <ul class="list-group">
                         <?php foreach ($servidores as $srv): ?>
                             <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span><strong><?= htmlspecialchars($srv['nombre']) ?></strong> <br><small><?= htmlspecialchars($srv['ip']) ?> - <?= htmlspecialchars($srv['estado']) ?></small></span>
+                                <span><strong><?= htmlspecialchars($srv['nombre']) ?></strong> <br><small><?= htmlspecialchars($srv['ip']) ?> (<?= htmlspecialchars($srv['estado']) ?>)</small></span>
                                 <div>
                                     <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#editSrv<?= $srv['id'] ?>">Editar</button>
                                     <form method="POST" style="display:inline;">
@@ -257,7 +318,6 @@ $contactos = $pdo->query("SELECT * FROM contactos")->fetchAll();
             </div>
         </div>
     </div>
-    <!-- Scripts requeridos para que funcionen las ventanas modales -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

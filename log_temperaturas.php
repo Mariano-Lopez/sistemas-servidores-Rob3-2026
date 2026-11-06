@@ -22,7 +22,11 @@ $logs = $pdo->query("SELECT * FROM historial_temperaturas ORDER BY fecha_hora DE
         <div>
             <a href="dashboard.php" class="btn btn-outline-light btn-sm me-2">Dashboard</a>
             <a href="configuracion.php" class="btn btn-outline-light btn-sm me-2">Configuración</a>
-            <a href="log_temperaturas.php" class="btn btn-light btn-sm me-2">Logs</a>
+            <a href="log_temperaturas.php" class="btn btn-light btn-sm me-2">Historial de Temperaturas</a>
+            <?php if (esAdmin()): ?>
+                <!-- Solo visible para los 4 administradores -->
+                <a href="accesos.php" class="btn btn-outline-light btn-sm me-2">Auditoría de Accesos</a>
+            <?php endif; ?>   
             <a href="logout.php" class="btn btn-outline-danger btn-sm">Salir</a>
         </div>
     </nav>

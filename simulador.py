@@ -46,6 +46,27 @@ def verificar_ping(ip_servidor):
     resultado = subprocess.run(comando, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return resultado.returncode == 0
 
+def obtener_intervalos_segundos(cursor):
+    cursor.execute("""
+        SELECT 
+            intervalo_temp_valor, intervalo_temp_unidad,
+            intervalo_ping_valor, intervalo_ping_unidad
+        FROM configuracion_sistema WHERE id = 1
+    """)
+    row = cursor.fetchone()
+    
+    if not row:
+        return 15, 30
+
+    temp_val, temp_uni, ping_val, ping_uni = row
+    factores = {'segundos': 1, 'minutos': 60, 'horas': 3600}
+
+    seg_temp = temp_val * factores.get(temp_uni, 1)
+    seg_ping = ping_val * factores.get(ping_uni, 1)
+
+    return seg_temp, seg_ping
+
+
 
 def iniciar_simulacion():
     print("Iniciando simulador de termómetro (Duración programada: 2 minutos)...")
@@ -73,8 +94,9 @@ def iniciar_simulacion():
             
             for srv_id, ip in servidores_db:
                 estado_actual = "Activo" if verificar_ping(ip) else "Apagado"
-                cursor.execute("UPDATE servidores SET estado = %s WHERE id = %s", (estado_actual, srv_id))
-            
+                # Actualizamos el estado y forzamos el guardado de la hora exacta
+                cursor.execute("UPDATE servidores SET estado = %s, ultima_verificacion = NOW() WHERE id = %s", (estado_actual, srv_id))
+                    
             conexion.commit()
             ultimo_ping = tiempo_actual # Reiniciamos el cronómetro
         # ----------------------------------------
